@@ -8,21 +8,31 @@ on:
 
 jobs:
   build:
-    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Verify Node Version
+        run: |
+          echo "Node Version:"
+          node -v
+          echo "NPM Version:"
+          npm -v
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Verify Capacitor
+        run: |
+          npx cap --version
 
       - name: Build React App
         run: npm run build
@@ -30,16 +40,16 @@ jobs:
       - name: Capacitor Sync
         run: npx cap sync android
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Grant Execute Permission
+      - name: Grant Gradle Permission
         run: chmod +x android/gradlew
 
       - name: Build Debug APK
