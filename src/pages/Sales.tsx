@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useERPStore } from '../store/useERPStore';
-import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { 
-  FileText, Calendar, CreditCard, Landmark, 
-  TrendingUp, Download, Eye, AlertCircle, ShoppingBag 
+  Calendar, CreditCard, Landmark, 
+  TrendingUp, Download, ShoppingBag 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { jsPDF } from 'jspdf';

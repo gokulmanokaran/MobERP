@@ -147,8 +147,8 @@ const computeDashboardState = (transactions: Transaction[]) => {
     return index < 5 ? day.toLocaleDateString('en-US', { weekday: 'short' }) : 'Today';
   });
 
-  const chartSalesData = [0, 0, 0, 0, 0, 0];
-  const chartExpensesData = [0, 0, 0, 0, 0, 0];
+  let chartSalesData: number[] = [0, 0, 0, 0, 0, 0];
+  let chartExpensesData: number[] = [0, 0, 0, 0, 0, 0];
   const chartKeys = Array(6).fill('').map((_, index) => {
     const day = new Date(today);
     day.setDate(day.getDate() - (5 - index));
@@ -202,8 +202,12 @@ const computeDashboardState = (transactions: Transaction[]) => {
     }
   }
 
-  if (chartSalesData.every((value) => value === 0)) chartSalesData[5] = 1;
-  if (chartExpensesData.every((value) => value === 0)) chartExpensesData[5] = 1;
+  if (chartSalesData.every((value) => value === 0)) {
+    chartSalesData = chartSalesData.map((value, idx) => (idx === 5 ? 1 : value));
+  }
+  if (chartExpensesData.every((value) => value === 0)) {
+    chartExpensesData = chartExpensesData.map((value, idx) => (idx === 5 ? 1 : value));
+  }
 
   return {
     todaySales,
@@ -245,7 +249,7 @@ const emptyState = {
   yesterdaySales: 0, yesterdayPurchase: 0, yesterdayExpense: 0,
   cashBalance: 0, bankBalance: 0, outstandingReceivables: 0,
   outstandingPayables: 0, pendingOrdersCount: 0,
-  chartSalesData: [1, 1, 1, 1, 1, 1], chartExpensesData: [1, 1, 1, 1, 1, 1], chartLabels: ['', '', '', '', '', 'Today'],
+  chartSalesData: [1, 1, 1, 1, 1, 1] as number[], chartExpensesData: [1, 1, 1, 1, 1, 1] as number[], chartLabels: ['', '', '', '', '', 'Today'],
   transactions: [] as Transaction[], topSellingProducts: [] as ProductStock[],
   lowStockAlerts: [] as ProductStock[], products: [] as ProductStock[],
   activities: [] as ActivityLog[], parkedBills: [] as ParkedBill[],

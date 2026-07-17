@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from '../layouts/AppLayout';
 import { Skeleton } from '../components/ui/Skeleton';
-import { type LucideIcon, ShoppingCart, CreditCard, Menu, User } from 'lucide-react';
+import { type LucideIcon, CreditCard } from 'lucide-react';
 
 // Lazy load the Dashboard page
 const Dashboard = lazy(() => import('../pages/Dashboard'));

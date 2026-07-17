@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useERPStore } from '../store/useERPStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
 import { LogOut, Save, Wifi, WifiOff, RefreshCw, Cloud, CloudOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

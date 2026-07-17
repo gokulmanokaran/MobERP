@@ -6,7 +6,6 @@ import { AppRoutes } from './routes/AppRoutes';
 import { useERPStore } from './store/useERPStore';
 import { useAuthStore } from './store/useAuthStore';
 import { Login } from './pages/Login';
-import { useState } from 'react';
 import dicLogo from './assets/DIC no back.png';
 
 const queryClient = new QueryClient({

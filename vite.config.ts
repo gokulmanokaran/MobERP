@@ -11,10 +11,6 @@ export default defineConfig({
     tailwindcss(),
     basicSsl(),
   ],
-  server: {
-    https: true,
-    host: true,
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

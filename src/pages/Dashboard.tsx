@@ -152,7 +152,6 @@ export const Dashboard: React.FC = () => {
     todayExpense,
     todayProfit,
     yesterdaySales,
-    yesterdayPurchase,
     yesterdayExpense,
     cashBalance,
     bankBalance,

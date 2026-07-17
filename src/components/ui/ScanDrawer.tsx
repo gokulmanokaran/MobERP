@@ -51,7 +51,6 @@ export const ScanDrawer: React.FC = () => {
     scanDrawerTab,
     setScanDrawerOpen,
     addProduct,
-    addTransaction,
     finalizeBill,
     products,
     updateProduct,
