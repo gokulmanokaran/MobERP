@@ -121,6 +121,7 @@ interface ERPState {
   parkBill: (bill: Omit<ParkedBill, 'id' | 'timestamp'>) => Promise<void>;
   removeParkedBill: (id: string) => Promise<void>;
   syncToCloud: () => Promise<void>;
+  resetAllData: (isRemoteReset?: boolean) => Promise<void>;
 }
 
 // ─────────────────────────── Helpers ─────────────────────────
@@ -202,12 +203,7 @@ const computeDashboardState = (transactions: Transaction[]) => {
     }
   }
 
-  if (chartSalesData.every((value) => value === 0)) {
-    chartSalesData = chartSalesData.map((value, idx) => (idx === 5 ? 1 : value));
-  }
-  if (chartExpensesData.every((value) => value === 0)) {
-    chartExpensesData = chartExpensesData.map((value, idx) => (idx === 5 ? 1 : value));
-  }
+
 
   return {
     todaySales,
@@ -249,7 +245,7 @@ const emptyState = {
   yesterdaySales: 0, yesterdayPurchase: 0, yesterdayExpense: 0,
   cashBalance: 0, bankBalance: 0, outstandingReceivables: 0,
   outstandingPayables: 0, pendingOrdersCount: 0,
-  chartSalesData: [1, 1, 1, 1, 1, 1] as number[], chartExpensesData: [1, 1, 1, 1, 1, 1] as number[], chartLabels: ['', '', '', '', '', 'Today'],
+  chartSalesData: [1, 1, 1, 1, 1, 1], chartExpensesData: [1, 1, 1, 1, 1, 1], chartLabels: ['', '', '', '', '', 'Today'],
   transactions: [] as Transaction[], topSellingProducts: [] as ProductStock[],
   lowStockAlerts: [] as ProductStock[], products: [] as ProductStock[],
   activities: [] as ActivityLog[], parkedBills: [] as ParkedBill[],
@@ -341,6 +337,20 @@ export const useERPStore = create<ERPState>((set, get) => {
           } catch { /* profiles table may not exist yet */ }
 
           if (!productsRes.error && !transactionsRes.error) {
+            
+            // Check for remote reset markers
+            const cloudActivities = activitiesRes.data || [];
+            const resetMarkers = cloudActivities.filter(a => a.id.startsWith('RESET-ALL-DATA-'));
+            if (resetMarkers.length > 0) {
+              const latestReset = Math.max(...resetMarkers.map(a => parseInt(a.id.split('-').pop() || '0')));
+              const localReset = Number(localStorage.getItem('erp_last_reset') || '0');
+              if (latestReset > localReset) {
+                localStorage.setItem('erp_last_reset', latestReset.toString());
+                get().resetAllData(true);
+                setTimeout(() => window.location.reload(), 50);
+                return;
+              }
+            }
             const products: ProductStock[] = mergeById(localProducts, (productsRes.data || []).map(p => ({
               id: p.id, sku: p.sku, name: p.name,
               stock: p.stock, minStock: p.minStock,
@@ -355,9 +365,12 @@ export const useERPStore = create<ERPState>((set, get) => {
               paymentMode: t.paymentMode,
             })));
 
-            const activities: ActivityLog[] = mergeById(localActivities, (activitiesRes.data || []).map(a => ({
-              id: a.id, timestamp: a.timestamp, type: a.type, description: a.description,
-            })));
+            const activities: ActivityLog[] = mergeById(localActivities, cloudActivities
+              .filter(a => !a.id.startsWith('RESET-ALL-DATA-'))
+              .map(a => ({
+                id: a.id, timestamp: a.timestamp, type: a.type, description: a.description,
+              }))
+            );
 
             const parkedBills: ParkedBill[] = mergeById(localParkedBills, (parkedRes.data || []).map(pb => ({
               id: pb.id, customerName: pb.customerName,
@@ -729,6 +742,60 @@ export const useERPStore = create<ERPState>((set, get) => {
             .then(({ error }) => { if (error) console.warn('[Sync] remove parked bill failed:', error.message); });
         }
       }
+    },
+
+    resetAllData: async (isRemoteReset = false) => {
+      const { dbSyncEnabled } = get();
+      if (!isRemoteReset && dbSyncEnabled && navigator.onLine) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        if (userId) {
+          try {
+            await Promise.all([
+              supabase.from('transactions').delete().eq('user_id', userId),
+              supabase.from('products').delete().eq('user_id', userId),
+              supabase.from('activities').delete().eq('user_id', userId),
+              supabase.from('parked_bills').delete().eq('user_id', userId)
+            ]);
+            
+            // Set a remote marker so other devices know to reset locally
+            const resetTimestamp = Date.now();
+            localStorage.setItem('erp_last_reset', resetTimestamp.toString());
+            await supabase.from('activities').insert({
+              id: `RESET-ALL-DATA-${resetTimestamp}`,
+              timestamp: new Date().toISOString(),
+              type: 'danger',
+              description: 'SYSTEM_RESET_MARKER',
+              user_id: userId
+            });
+          } catch (e) {
+            console.error('[Sync] Failed to delete cloud data:', e);
+          }
+        }
+      }
+
+      clearLocalStore();
+      set({
+        transactions: [],
+        products: [],
+        parkedBills: [],
+        activities: [],
+        todaySales: 0,
+        todayPurchase: 0,
+        todayExpense: 0,
+        todayProfit: 0,
+        yesterdaySales: 0,
+        yesterdayExpense: 0,
+        cashBalance: 0,
+        bankBalance: 0,
+        outstandingReceivables: 0,
+        outstandingPayables: 0,
+        pendingOrdersCount: 0,
+        chartSalesData: [0, 0, 0, 0, 0, 0],
+        chartExpensesData: [0, 0, 0, 0, 0, 0],
+        topSellingProducts: [],
+        lowStockAlerts: []
+      });
     },
   };
 });

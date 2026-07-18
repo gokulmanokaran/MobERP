@@ -22,7 +22,6 @@ import { PullToRefresh } from '../components/ui/PullToRefresh';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Button } from '../components/ui/Button';
 import { Input, Select } from '../components/ui/Input';
-
 // Custom lightweight SVG Curved Area Chart
 const CurvedAreaChart: React.FC<{ data: number[]; color: string; id: string }> = ({ data, color, id }) => {
   const max = Math.max(...data) * 1.1;
@@ -108,42 +107,6 @@ const CurvedAreaChart: React.FC<{ data: number[]; color: string; id: string }> =
   );
 };
 
-// Custom lightweight SVG Bar Chart
-const BarChart: React.FC<{ data: number[]; color: string }> = ({ data, color }) => {
-  const max = Math.max(...data) * 1.1;
-  const width = 320;
-  const height = 120;
-  const barWidth = 26;
-  const gap = (width - barWidth * data.length) / (data.length - 1);
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
-      {data.map((val, i) => {
-        const barHeight = (val / max) * (height - 20);
-        const x = i * (barWidth + gap);
-        const y = height - barHeight;
-        return (
-          <g key={i}>
-            <motion.rect
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: 1 }}
-              transition={{ duration: 0.6, delay: i * 0.05, ease: 'easeOut' }}
-              style={{ originY: '120px' }}
-              x={x}
-              y={y}
-              width={barWidth}
-              height={barHeight}
-              rx="6"
-              fill={color}
-              className="opacity-90"
-            />
-          </g>
-        );
-      })}
-    </svg>
-  );
-};
-
 export const Dashboard: React.FC = () => {
   const {
     userName,
@@ -159,12 +122,10 @@ export const Dashboard: React.FC = () => {
     outstandingPayables,
     pendingOrdersCount,
     chartSalesData,
-    chartExpensesData,
     chartLabels,
     transactions,
     topSellingProducts,
     lowStockAlerts,
-    activities,
     addTransaction,
     refreshDashboard,
   } = useERPStore();
@@ -434,6 +395,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
+
+
         {/* HIGH-PERFORMANCE INTERACTIVE CHARTS */}
         <section className="mb-6 space-y-4">
           {/* Sales Chart Card */}
@@ -450,26 +413,6 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="pt-2">
               <CurvedAreaChart data={chartSalesData} color="#0F5FAF" id="sales" />
-            </div>
-            <div className="flex justify-between text-[10px] text-text-secondary font-semibold pt-1 border-t border-slate-50">
-              {chartLabels.map((label, idx) => <span key={idx}>{label}</span>)}
-            </div>
-          </div>
-
-          {/* Expenses Chart Card */}
-          <div className="p-4 bg-white border border-brand-border rounded-[18px] space-y-3 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wide">6-Day Run-Rate</span>
-                <h3 className="text-sm font-extrabold text-text-primary">Expense Distribution</h3>
-              </div>
-              <span className={`text-xs font-bold flex items-center space-x-1 ${metricsData.expensePerc <= 0 ? 'text-success' : 'text-danger'}`}>
-                <span>{metricsData.expensePerc <= 0 ? '' : '+'}{metricsData.expensePerc.toFixed(1)}%</span>
-                {metricsData.expensePerc <= 0 ? <TrendingDown size={12} /> : <TrendingUp size={12} />}
-              </span>
-            </div>
-            <div className="pt-2">
-              <BarChart data={chartExpensesData} color="#DC2626" />
             </div>
             <div className="flex justify-between text-[10px] text-text-secondary font-semibold pt-1 border-t border-slate-50">
               {chartLabels.map((label, idx) => <span key={idx}>{label}</span>)}
@@ -519,7 +462,7 @@ export const Dashboard: React.FC = () => {
                 <div className="relative">
                   <select
                     value={filterType}
-                    onChange={(e: any) => setFilterType(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterType(e.target.value as any)}
                     className="h-9 px-3 bg-brand-surface border border-brand-border rounded-[12px] text-xs font-semibold text-text-primary appearance-none pr-8 cursor-pointer"
                   >
                     <option value="all">All Logs</option>
@@ -624,25 +567,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        {/* RECENT ACTIVITIES TIMELINE */}
-        <section className="mb-8">
-          <div className="p-4 bg-white border border-brand-border rounded-[18px] space-y-3 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary">System Activity Logs</h3>
-            <div className="relative pl-4 border-l border-brand-border/60 space-y-4 pt-1">
-              {activities.map((act) => (
-                <div key={act.id} className="relative">
-                  {/* Circle dot on line */}
-                  <span className={`absolute -left-[20.5px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white ${act.type === 'success' ? 'bg-success' : act.type === 'warning' ? 'bg-warning' : act.type === 'danger' ? 'bg-danger' : 'bg-primary'
-                    }`} />
-                  <div className="text-xs">
-                    <p className="text-text-primary leading-relaxed">{act.description}</p>
-                    <span className="text-[9px] text-text-secondary block mt-0.5">{act.timestamp}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         {/* ------------------------------------------------------------ */}
         {/* NATIVE SLIDE-UP BOTTOM SHEET DRAWER (LEDGER ENTRY FORM) */}

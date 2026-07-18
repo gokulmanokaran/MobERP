@@ -9,12 +9,15 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    basicSsl(),
+    basicSsl(), // Enables HTTPS so camera works on mobile over local network
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    https: true, // Required for getUserMedia (camera) on mobile browsers
+    host: true,  // Expose to local network
+  },
 })
-

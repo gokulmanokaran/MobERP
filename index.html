@@ -6,8 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>moberp</title>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="margin: 0; background-color: #F8FAFC;">
+    <div id="root">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #F8FAFC;">
+        <img src="/logo.png" alt="MobERP Logo" style="width: 120px; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;" />
+        <style>
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+          }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

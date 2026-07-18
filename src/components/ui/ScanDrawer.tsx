@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ArrowLeft, Scan, QrCode, Package,
   ChevronRight, Printer, ShieldCheck, CheckCircle2, AlertCircle,
-  ShoppingCart, Trash2, Plus, Minus, Search
+  ShoppingCart, Trash2, Plus, Minus, Search, Edit2
 } from 'lucide-react';
 import { useERPStore, type CartItem } from '../../store/useERPStore';
 import { Input } from './Input';
@@ -109,6 +109,14 @@ export const ScanDrawer: React.FC = () => {
   }, [manualSearch, products]);
 
   /* ─── PRODUCT FEED HANDLERS ─── */
+  const updateCartQty = useCallback((productId: string, delta: number) => {
+    setCart((prev) =>
+      prev
+        .map((c) => c.productId === productId ? { ...c, qty: c.qty + delta } : c)
+        .filter((c) => c.qty > 0)
+    );
+  }, []);
+
   const handleBarcodeScanned = useCallback((value: string) => {
     const trimmed = value.trim();
 
@@ -224,13 +232,7 @@ export const ScanDrawer: React.FC = () => {
     setTimeout(() => setScanFeedback(null), 1500);
   }, [products]);
 
-  const updateCartQty = (productId: string, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((c) => c.productId === productId ? { ...c, qty: c.qty + delta } : c)
-        .filter((c) => c.qty > 0)
-    );
-  };
+
 
   const removeFromCart = (productId: string) => {
     setCart((prev) => prev.filter((c) => c.productId !== productId));
@@ -253,7 +255,8 @@ export const ScanDrawer: React.FC = () => {
 
   const handleGenerateBill = async () => {
     if (cart.length === 0) return;
-    const invoiceNo = `INV-POS-${Math.floor(1000 + Math.random() * 9000)}`;
+    const randomNum = window.crypto.getRandomValues(new Uint32Array(1))[0] % 9000;
+    const invoiceNo = `INV-POS-${Math.floor(1000 + randomNum)}`;
 
     const tx = await finalizeBill({
       cart,
@@ -316,9 +319,14 @@ export const ScanDrawer: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-brand-border flex-shrink-0">
           <div className="flex items-center space-x-2">
-            {scanDrawerTab !== 'menu' && !isSuccessState && (
+            {!['scan_bill', 'scan_feed'].includes(scanDrawerTab) && !isSuccessState && (
               <button
-                onClick={() => { setScanError(''); setScanFeedback(null); setScanDrawerOpen(true, 'menu'); }}
+                onClick={() => {
+                  setScanError('');
+                  setScanFeedback(null);
+                  if (scanDrawerTab === 'feed_form') setScanDrawerOpen(true, 'scan_feed');
+                  else if (scanDrawerTab === 'bill_checkout' || scanDrawerTab === 'held_bills') setScanDrawerOpen(true, 'scan_bill');
+                }}
                 className="p-1.5 rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors -ml-1 cursor-pointer"
               >
                 <ArrowLeft size={18} className="text-text-secondary" />
@@ -512,6 +520,26 @@ export const ScanDrawer: React.FC = () => {
                 <p className="text-[11px] text-text-secondary text-center font-medium">
                   Point camera at a product barcode to register it.
                 </p>
+
+                <div className="pt-2 border-t border-brand-border/50">
+                  <button
+                    onClick={() => {
+                      setScanError('');
+                      setDuplicateProduct(null);
+                      setFeedSku(`SKU-${Math.floor(100000 + Math.random() * 900000)}`);
+                      setFeedName('');
+                      setFeedPurchasePrice('');
+                      setFeedSellingPrice('');
+                      setFeedStock('20');
+                      setFeedMinStock('5');
+                      setScanDrawerOpen(true, 'feed_form');
+                    }}
+                    className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-brand-border rounded-xl text-xs font-bold text-text-primary active:scale-95 transition-all cursor-pointer flex items-center justify-center space-x-2"
+                  >
+                    <Edit2 size={14} className="text-text-secondary" />
+                    <span>Enter Manually (No QR/Barcode)</span>
+                  </button>
+                </div>
               </motion.div>
             )}
 
@@ -665,9 +693,16 @@ export const ScanDrawer: React.FC = () => {
                     <p className="text-[11px] text-text-secondary font-medium">
                       Cart is empty. Scan product QR/barcode codes to add items.
                     </p>
-                    <p className="text-[10px] text-text-secondary mt-1">
-                      Available SKUs: {products.map(p => p.sku).join(', ')}
-                    </p>
+                    <div className="flex justify-center mt-3 gap-2">
+                      {parkedBills.length > 0 && (
+                        <Button 
+                          onClick={() => setScanDrawerOpen(true, 'held_bills')}
+                          className="bg-orange-50 text-orange-700 font-bold text-xs h-8 px-3 border border-orange-200"
+                        >
+                          View Held Bills ({parkedBills.length})
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </motion.div>

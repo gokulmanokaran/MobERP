@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, ZapOff, FlipHorizontal } from 'lucide-react';
 
 interface CameraScannerProps {
@@ -23,20 +23,6 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({ mode, continuous =
   const lastScanned = useRef('');
   const cooldown = useRef(false);
 
-  const formats =
-    mode === 'qr'
-      ? [Html5QrcodeSupportedFormats.QR_CODE]
-      : [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.DATA_MATRIX,
-          Html5QrcodeSupportedFormats.QR_CODE,
-        ];
-
   const stopScanner = async () => {
     try {
       if (scannerRef.current && isStarted) {
@@ -53,14 +39,14 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({ mode, continuous =
         await stopScanner();
       }
 
-      const scanner = new Html5Qrcode(SCANNER_ID, { verbose: false, formatsToSupport: formats });
+      const scanner = new Html5Qrcode(SCANNER_ID, { verbose: false });
       scannerRef.current = scanner;
       resultFired.current = false;
       lastScanned.current = '';
 
       await scanner.start(
         { facingMode: camera },
-        { fps: 10, qrbox: mode === 'qr' ? { width: 220, height: 220 } : { width: 280, height: 100 } },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
           if (continuous) {
             // In continuous mode: allow same code after 2s cooldown
@@ -129,8 +115,8 @@ export const CameraScanner: React.FC<CameraScannerProps> = ({ mode, continuous =
             <div
               className="relative border-2 rounded-xl"
               style={{
-                width: 200,
-                height: mode === 'qr' ? 200 : 100,
+                width: 220,
+                height: 220,
                 borderColor: mode === 'qr' ? '#60a5fa' : '#34d399',
               }}
             >

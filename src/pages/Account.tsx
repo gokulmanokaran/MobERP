@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useERPStore } from '../store/useERPStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { LogOut, Save, Wifi, WifiOff, RefreshCw, Cloud, CloudOff } from 'lucide-react';
+import { LogOut, Save, Wifi, WifiOff, RefreshCw, Cloud, CloudOff, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Account: React.FC = () => {
   const { 
     userName, businessName, updateProfile, clearData,
     dbSyncEnabled, setDbSyncEnabled,
-    isOnline, isSyncing, syncToCloud
+    isOnline, isSyncing, syncToCloud, resetAllData
   } = useERPStore();
   const { signOut, user } = useAuthStore();
   
@@ -190,9 +190,26 @@ export const Account: React.FC = () => {
               {syncMsg}
             </p>
           )}
-          <p className="text-[10px] text-text-secondary text-center">
+          <p className="text-[10px] text-text-secondary text-center pb-2">
             App works fully offline. Data is stored locally and optionally synced to cloud when connected.
           </p>
+
+          <hr className="border-brand-border" />
+
+          {/* Delete All Data Button */}
+          <button
+            onClick={async () => {
+              const confirmDelete = window.confirm("⚠️ WARNING: Are you sure you want to delete ALL data? This will completely reset the app and cannot be undone.");
+              if (confirmDelete) {
+                await resetAllData();
+                window.location.reload();
+              }
+            }}
+            className="w-full h-11 bg-red-50 border border-red-200 text-red-600 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 active:scale-[0.98] transition-all cursor-pointer mt-2"
+          >
+            <Trash2 size={15} />
+            <span>Delete All Data & Reset App</span>
+          </button>
         </div>
 
         {/* Contact DIC */}
